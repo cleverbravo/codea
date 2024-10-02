@@ -8,8 +8,8 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.codea"
-        minSdk = 26
+        applicationId = "com.codea"
+        minSdk = 34
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -18,6 +18,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        applicationIdSuffix = "codea"
     }
 
     buildTypes {

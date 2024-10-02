@@ -11,18 +11,36 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.codea.domain.ApkManager.ApkManager
+import com.codea.domain.ApkManager.InstallSession
+import com.codea.domain.ApkManager.ToolsApkNames
 import com.example.codea.ui.theme.CodeaTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val apkManager = ApkManager()
+        var result: Result<InstallSession>
+        var text: String = ""
+        CoroutineScope(Dispatchers.Default).launch {
+            result = apkManager.installTools(this@MainActivity, ToolsApkNames.termux)
+            result.onSuccess {
+                text = "terminado"
+            }.onFailure {
+                text = "falla ${it.message}"
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             CodeaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                            name = "Android",
-                            modifier = Modifier.padding(innerPadding)
+                        name = text,
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -30,11 +48,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
-            text = "Hello $name!",
-            modifier = modifier
+        text = "Hello $name!",
+        modifier = modifier
     )
 }
 

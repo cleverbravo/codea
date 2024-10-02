@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--<external-path name="apklocation" path="/storage/emulated/0/Download"/>-->
+    <external-path
+        name="apklocation"
+        path="/" />-->
+</paths>
