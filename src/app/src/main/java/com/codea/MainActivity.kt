@@ -57,7 +57,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "preview1")
 @Composable
 fun GreetingPreview() {
     CodeaTheme {
