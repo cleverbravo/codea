@@ -26,12 +26,36 @@ class MainActivity : ComponentActivity() {
         var result: Result<InstallSession>
         var text: String = ""
         CoroutineScope(Dispatchers.Default).launch {
+//            result = apkManager.installTools(this@MainActivity, ToolsApkNames.termux)
+//            result.onSuccess {
+//                text = "terminado"
+//            }.onFailure {
+//                text = "falla ${it.message}"
+//            }
+
             result = apkManager.installTools(this@MainActivity, ToolsApkNames.termux)
             result.onSuccess {
-                text = "terminado"
+                text = " ya esta instalado"
+                val commands = arrayOf("pkg install tur-repo code-server -y")
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT)
+                }
+                val installCodeServer = BashCommandExecutor(this@MainActivity)
+                for (command in commands) {
+                    launch {
+                        /*installCodeServer.executeCommand(command).collect { line ->
+                            Toast.makeText(this@MainActivity, line, Toast.LENGTH_SHORT)
+                        }*/
+                        installCodeServer.executeCommand(command)
+                    }
+                }
             }.onFailure {
-                text = "falla ${it.message}"
+                text = "error ${it.message}"
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT)
+                }
             }
+
         }
 
         enableEdgeToEdge()
