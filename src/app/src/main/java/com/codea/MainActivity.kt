@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
                         /*installCodeServer.executeCommand(command).collect { line ->
                             Toast.makeText(this@MainActivity, line, Toast.LENGTH_SHORT)
                         }*/
+                        //send to the aditional permission in android to set the Run commands in termux is enabled
                         val commandResult = installCodeServer.executeCommand(command)
                         commandResult.onSuccess {
                             Toast.makeText(
