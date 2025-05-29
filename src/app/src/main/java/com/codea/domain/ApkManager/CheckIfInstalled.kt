@@ -15,30 +15,13 @@ class CheckIfInstalled : BaseInstallChain() {
                 PackageManager.MATCH_ALL
             )
             session.apkIsInstalled = true
-            TODO("which version is installed?")
+//            TODO("which version is installed?")
         } catch (e: PackageManager.NameNotFoundException) {
             println("The package ${session.packageName} is not installed.")
-//            val intent =
-//                session.context.packageManager.getLaunchIntentForPackage(session.packageName)
-//            if (intent != null)
-//                session.apkIsInstalled = true
         } catch (e: Exception) {
             e.printStackTrace()
             return Result.failure(e)
         }
-//        if (session.apkIsInstalled)
-//            return super.execute(session)
-//        try {
-//            session.context.packageManager.getApplicationInfo(session.packageName, 0)
-//            session.apkIsInstalled = true
-//        } catch (e: PackageManager.NameNotFoundException) {
-//            println("The application ${session.packageName} is not installed.")
-//            if (isAppInstalledRobust(session))
-//                session.apkIsInstalled = true
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            return Result.failure(e)
-//        }
         return super.execute(session)
     }
 
