@@ -64,7 +64,8 @@ class BashCommandExecutor(val context: Context) : IShellCommandExecutor {
                 pendingIntent
             )
 
-            context.startService(intent)
+//            context.startService(intent)
+            context.startForegroundService(intent)
             commandInfo.state = CommandState.RUNNING
         }
 }

@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!--this permission needs to run this in termux:
+    mkdir -p ~/.termux
+    echo "allow-external-apps=true" >> ~/.termux/termux.properties
+    -->
     <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"

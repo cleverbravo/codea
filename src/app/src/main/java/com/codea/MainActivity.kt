@@ -8,18 +8,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import com.codea.domain.ApkManager.ApkManager
 import com.codea.domain.ApkManager.ToolsApkNames
 import com.codea.domain.TerminalManager.BashCommandExecutor
@@ -32,25 +29,28 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val apkManager = ApkManager()
-//        var result: Result<InstallSession>
 
-        var showWebView = true
-        var showErrorDialog = false
-        var errorMessage = ""
+        var statusDialogVisible by mutableStateOf(true)
+        var statusMessage by mutableStateOf("Installing Termux…")
+        var showWebView by mutableStateOf(false)
+        var showErrorDialog by mutableStateOf(false)
+        var errorMessage by mutableStateOf("")
+        var lastCommand by mutableStateOf(false)
 
         CoroutineScope(Dispatchers.Default).launch {
             val installResult = apkManager.installTools(this@MainActivity, ToolsApkNames.termux)
-//            result.onSuccess {
-//                text = "terminado"
-//            }.onFailure {
-//                text = "falla ${it.message}"
-//            }
-
             installResult.onSuccess {
-                Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(this@MainActivity, "Termux is installed.", Toast.LENGTH_SHORT)
-                }
-                val commands = arrayOf("pkg install tur-repo code-server -y")
+
+                statusMessage = "Termux is installed."
+
+                val commands =
+                    arrayOf(
+                        "pkg update -y",
+                        "pkg upgrade -y",
+                        "pkg install tur-repo -y",
+                        "pkg install code-server -y",
+                        "code-server --auth none"
+                    )
                 val installCodeServer = BashCommandExecutor(this@MainActivity)
                 for (command in commands) {
                     launch {
@@ -58,26 +58,33 @@ class MainActivity : ComponentActivity() {
                             Toast.makeText(this@MainActivity, line, Toast.LENGTH_SHORT)
                         }*/
                         //send to the aditional permission in android to set the Run commands in termux is enabled
+                        statusMessage = "Running: $command"
                         val commandResult = installCodeServer.executeCommand(command)
                         commandResult.onSuccess {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Sucess:${command}",
-                                Toast.LENGTH_SHORT
-                            )
+                            statusMessage = "Success: $command"
+                            if (command == commands.last()) {
+                                lastCommand = true
+                                statusDialogVisible = false
+                                showWebView = true
+                            }
                         }.onFailure {
+//                            errorMessage = "Failure: ${throwable.message}"
                             errorMessage = "Failure:${it.message}"
-                            showWebView = false
+                            statusDialogVisible = false
                             showErrorDialog = true
+
+                            showWebView = false
                         }
-                    }
+                    }.join()
                 }
             }.onFailure {
-                Handler(Looper.getMainLooper()).post {
-                    errorMessage = "Error installing:${it.message}"
+                errorMessage = "Error installing:${it.message}"
+
+                Handler(Looper.getMainLooper()).postDelayed({
                     showWebView = false
+                    statusDialogVisible = false
                     showErrorDialog = true
-                }
+                }, 800)
             }
 
         }
@@ -87,22 +94,25 @@ class MainActivity : ComponentActivity() {
             CodeaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        if (showWebView) {
+                        if (showErrorDialog) {
+                            ErrorDialog(
+                                message = errorMessage,
+                                onDismiss = { showErrorDialog = false }
+                            )
+                        }
+                        // 2) Else if the status popup is visible, show that (no WebView yet)
+                        else if (statusDialogVisible) {
+                            StatusDialog(message = statusMessage)
+                        }
+                        // 3) Else if installation + commands succeeded, show the WebView
+                        else if (showWebView) {
                             // Display WebView when installation succeeds
-                            WebViewScreen(url = "https://www.example.com ")
+                            WebViewScreen(url = "https://128.0.0.1:8080 ")
                         } else {
                             // Initial screen
                             Greeting(
                                 name = "Loading...",
                                 modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-
-                        // Error dialog
-                        if (showErrorDialog) {
-                            ErrorDialog(
-                                message = errorMessage,
-                                onDismiss = { showErrorDialog = false }
                             )
                         }
                     }
@@ -112,6 +122,38 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun StatusDialog(message: String) {
+    // A Compose Dialog that never dismisses by tapping outside (onDismissRequest = { })
+    Dialog(onDismissRequest = { /* no-op, so it stays visible until we hide it */ }) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            tonalElevation = 8.dp,
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight()
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(64.dp)
+                    .width(IntrinsicSize.Max),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Please wait",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 60.dp)
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(10.dp)
+
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun WebViewScreen(url: String) {

@@ -64,6 +64,7 @@ dependencies {
 //    implementation("com.github.Termux:termux-shared:b800f1cc81")
     implementation("com.termux.termux-app:termux-shared:9ee1c9d5ad")
     implementation("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
+    implementation(libs.androidx.lifecycle.runtime.compose)
 //    implementation(libs.material)
 //    implementation(libs.androidx.appcompat)
 //    implementation(libs.androidx.constraintlayout)
