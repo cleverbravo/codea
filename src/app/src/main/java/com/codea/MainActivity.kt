@@ -4,11 +4,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.webkit.WebView
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -99,17 +100,17 @@ class MainActivity : ComponentActivity() {
                                 message = errorMessage,
                                 onDismiss = { showErrorDialog = false }
                             )
-                        }
-                        // 2) Else if the status popup is visible, show that (no WebView yet)
-                        else if (statusDialogVisible) {
+                        } else if (statusDialogVisible) {
                             StatusDialog(message = statusMessage)
-                        }
-                        // 3) Else if installation + commands succeeded, show the WebView
-                        else if (showWebView) {
-                            // Display WebView when installation succeeds
-                            WebViewScreen(url = "http://127.0.0.1:8080 ")
+                        } else if (showWebView) {
+                            WebViewScreen(
+                                url = "http://127.0.0.1:8080 ",
+                                onSwipeDown = {
+
+
+                                })
                         } else {
-                            // Initial screen
+                            //???
                             Greeting(
                                 name = "Loading...",
                                 modifier = Modifier.align(Alignment.Center)
@@ -124,8 +125,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun StatusDialog(message: String) {
-    // A Compose Dialog that never dismisses by tapping outside (onDismissRequest = { })
-    Dialog(onDismissRequest = { /* no-op, so it stays visible until we hide it */ }) {
+    Dialog(onDismissRequest = { /*stays visible until we hide it*/ }) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             tonalElevation = 8.dp,
@@ -156,15 +156,27 @@ fun StatusDialog(message: String) {
 }
 
 @Composable
-fun WebViewScreen(url: String) {
+fun WebViewScreen(url: String, onSwipeDown: () -> Unit) {
+    var webView: WebView? by remember { mutableStateOf(null) }
     AndroidView(
         factory = { context ->
             WebView(context).apply {
                 settings.javaScriptEnabled = true
                 loadUrl(url)
+                webView = this
             }
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectVerticalDragGestures { change, dragAmount ->
+                    if (dragAmount > 0) {
+                        onSwipeDown()
+                        webView?.reload()
+                        change.consume()
+                    }
+                }
+            }
     )
 }
 
