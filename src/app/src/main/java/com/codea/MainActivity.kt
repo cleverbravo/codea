@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
                         "pkg upgrade -y",
                         "pkg install tur-repo -y",
                         "pkg install code-server -y",
-                        "code-server --auth none"
+                        "code-server --auth none &"
                     )
                 val installCodeServer = BashCommandExecutor(this@MainActivity)
                 for (command in commands) {
@@ -107,7 +107,7 @@ class MainActivity : ComponentActivity() {
                         // 3) Else if installation + commands succeeded, show the WebView
                         else if (showWebView) {
                             // Display WebView when installation succeeds
-                            WebViewScreen(url = "https://128.0.0.1:8080 ")
+                            WebViewScreen(url = "http://127.0.0.1:8080 ")
                         } else {
                             // Initial screen
                             Greeting(

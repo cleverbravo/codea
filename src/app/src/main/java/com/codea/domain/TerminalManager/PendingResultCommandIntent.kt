@@ -25,34 +25,35 @@ class PendingResultCommandIntent() :
     override fun onHandleIntent(intent: Intent?) {
         if (intent == null)
             return
-        val executionId = intent?.getIntExtra(EXECUTION_ID, -1) ?: -1
-        val cont = BashCommandExecutor.continuationMap.remove(executionId)
-        if (cont != null) {
-            val result: Result<CommandInfo> = Result.success(commandInfo)
-            cont.resume(result)
-        }
-
         commandInfo = intent.getParcelableExtra(COMMAND_INFO)!!
+        val executionId = intent.getIntExtra(EXECUTION_ID, -1)
+        val cont = BashCommandExecutor.continuationMap.remove(executionId)
+//        if (cont != null) {
+//            val result: Result<CommandInfo> = Result.success(commandInfo)
+//            cont.resume(result)
+//        }
+
         commandInfo.state = CommandState.STOPPED
-        val resultBundle = intent.getBundleExtra(RESULT) ?: return;
+        val resultBundle = intent.getBundleExtra(RESULT) ?: return
 
         commandInfo.state = CommandState.FINISHED
         commandInfo.stdout = resultBundle.getString(
             TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_STDOUT,
             ""
         )
-        commandInfo?.stderr = resultBundle.getString(
+        commandInfo.stderr = resultBundle.getString(
             TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_STDERR,
             ""
         )
 
-        commandInfo?.exitCode =
+        commandInfo.exitCode =
             resultBundle.getInt(TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_EXIT_CODE)
-        commandInfo?.errorCode =
+        commandInfo.errorCode =
             resultBundle.getInt(TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_ERR)
-        commandInfo?.errorMessage = resultBundle.getString(
+        commandInfo.errorMessage = resultBundle.getString(
             TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_ERRMSG,
             ""
         )
+        cont?.resume(Result.success(commandInfo))
     }
 }

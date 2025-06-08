@@ -29,6 +29,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Codea"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
@@ -53,6 +54,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
+        <service
+            android:name="com.codea.domain.TerminalManager.PendingResultCommandIntent"
+            android:exported="true" />
     </application>
 
 </manifest>
