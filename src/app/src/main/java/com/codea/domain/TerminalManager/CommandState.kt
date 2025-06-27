@@ -10,6 +10,9 @@ data class CommandInfo(val command: String) : Parcelable {
         stderr = inParcel.readString()
         errorMessage = inParcel.readString()
         errorCode = inParcel.readValue(kotlin.Int::class.java.classLoader) as? Int
+        val auxState = inParcel.readString() ?: ""
+        //TODO: can cause an exception?
+        state = CommandState.valueOf(auxState)
     }
 
     var state: CommandState = CommandState.CREATED
@@ -22,12 +25,12 @@ data class CommandInfo(val command: String) : Parcelable {
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(command)
-        dest.writeString(state.name)
         dest.writeValue(exitCode)
         dest.writeString(stdout)
         dest.writeString(stderr)
         dest.writeString(errorMessage)
         dest.writeValue(errorCode)
+        dest.writeString(state.name)
     }
 
     companion object CREATOR : Parcelable.Creator<CommandInfo> {

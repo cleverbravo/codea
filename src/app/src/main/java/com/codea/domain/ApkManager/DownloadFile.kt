@@ -17,6 +17,7 @@ class DownloadFile : BaseInstallChain() {
         if (session.apkIsInstalled) return super.execute(session)
 
         val apkFile = prepareApkFile(session)
+        session.statusMessage = "Downloading file..."
         println("Downloading file from ${session.downloadApkUrl} to ${apkFile.path}")
 
         session.apkURI = Uri.fromFile(apkFile)

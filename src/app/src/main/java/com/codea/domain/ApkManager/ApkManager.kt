@@ -5,12 +5,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class ApkManager : IApkManager {
+class ApkManager(var statusMessage: String) : IApkManager {
     override suspend fun installTools(
         context: Context,
         packageName: String
     ): Result<InstallSession> {
-        val installSession = InstallSession(packageName, context)
+        val installSession = InstallSession(packageName, context, statusMessage)
         var result = Result.success(installSession)
 
         val installChain = CheckIfInstalled()

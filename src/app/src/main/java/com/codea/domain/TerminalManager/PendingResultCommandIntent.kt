@@ -54,6 +54,11 @@ class PendingResultCommandIntent() :
             TermuxConstants.TERMUX_APP.TERMUX_SERVICE.EXTRA_PLUGIN_RESULT_BUNDLE_ERRMSG,
             ""
         )
-        cont?.resume(Result.success(commandInfo))
+        println("*************************   ${commandInfo.command} exitCode=${commandInfo.exitCode} ${commandInfo.stdout}  errorMessage:${commandInfo.errorMessage}  stderr=${commandInfo.stderr}")
+//        println("${commandInfo.command} exitCode=${commandInfo.exitCode}")
+        if (commandInfo.exitCode != 0)
+            cont?.resume(Result.failure(RuntimeException("${commandInfo.command} exitCode=${commandInfo.exitCode}")))
+        else
+            cont?.resume(Result.success(commandInfo))
     }
 }
