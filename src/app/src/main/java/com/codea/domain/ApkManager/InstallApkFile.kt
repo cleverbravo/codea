@@ -11,6 +11,7 @@ class InstallApkFile : BaseInstallChain() {
     override suspend fun execute(session: InstallSession): Result<InstallSession> {
         if (session.apkIsInstalled)
             return super.execute(session)
+        statusMessageState.value = "Installing ${session.packageName} ..."
         val packageInstaller = session.context.packageManager.packageInstaller
         val params =
             PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)

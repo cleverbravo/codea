@@ -17,7 +17,7 @@ class DownloadFile : BaseInstallChain() {
         if (session.apkIsInstalled) return super.execute(session)
 
         val apkFile = prepareApkFile(session)
-        session.statusMessage = "Downloading file..."
+        statusMessageState.value = "Downloading ${session.apkFileName} ..."
         println("Downloading file from ${session.downloadApkUrl} to ${apkFile.path}")
 
         session.apkURI = Uri.fromFile(apkFile)
@@ -64,7 +64,7 @@ class DownloadFile : BaseInstallChain() {
             val receiver =
                 createDownloadReceiver(session, downloadId, downloadManager, continuation)
 
-            // Register your receiver here (for example with DownloadManager)
+            // this is the receiver
             session.context.registerReceiver(
                 receiver,
                 IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),

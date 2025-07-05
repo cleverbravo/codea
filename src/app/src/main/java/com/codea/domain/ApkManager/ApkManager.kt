@@ -4,16 +4,21 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
 
-class ApkManager(var statusMessage: String) : IApkManager {
+class ApkManager() : IApkManager {
+    var statusMessage by mutableStateOf("Installing Termux…")
     override suspend fun installTools(
         context: Context,
         packageName: String
     ): Result<InstallSession> {
-        val installSession = InstallSession(packageName, context, statusMessage)
+        val installSession = InstallSession(packageName, context)
         var result = Result.success(installSession)
 
         val installChain = CheckIfInstalled()
+        var statusMessage by installChain.statusMessageState
+        statusMessage = this.statusMessage
+
         installChain.chain(FindSuggestedVersion())
             .chain(VerifyFileExists())
             .chain(DownloadFile())

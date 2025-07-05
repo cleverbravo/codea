@@ -43,7 +43,8 @@ class MainActivity : ComponentActivity() {
         var errorMessage by mutableStateOf("")
         var lastCommand by mutableStateOf(false)
 
-        val apkManager = ApkManager(statusMessage)
+        val apkManager = ApkManager()
+        apkManager.statusMessage = statusMessage
 
         CoroutineScope(Dispatchers.Default).launch {
             val installResult = apkManager.installTools(this@MainActivity, ToolsApkNames.termux)
