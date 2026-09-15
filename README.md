@@ -1,93 +1,294 @@
-# codea
+# CODEA
 
+> **Your phone has a shell. Give it a reason to run.**
 
+CODEA is an experimental Android project that turns a phone into a tiny development workstation by connecting **Jetpack Compose, Kotlin, Termux, shell automation, code-server, and WebView**.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+```text
+ Android
+    │
+    ▼
+ ┌──────────────┐
+ │    CODEA     │  Kotlin + Compose
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │  APK Manager │  install / verify / chain
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │    Termux    │  Linux user-space
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │ Shell runner │  commands + status
+ └──────┬───────┘
+        │
+        ▼
+ ┌──────────────┐
+ │ code-server  │  localhost:8080
+ └──────┬───────┘
+        │
+        ▼
+      WebView
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/cleverbravov/codea.git
-git branch -M main
-git push -uf origin main
+
+## 🧠 Why CODEA?
+
+There is a particular kind of developer who looks at a powerful Android phone and thinks:
+
+> *“This is a computer. What if I treated it like one?”*
+
+CODEA is an answer to that question.
+
+Instead of building another mobile UI, the project experiments with using Android as the **orchestrator** and Termux as the **developer toolbox**. The application prepares the environment, executes commands, starts a local development service, and brings that service back into a native Android experience.
+
+The goal is not to pretend that a phone is a desktop.
+
+The goal is to discover **how much of a desktop can fit in your pocket.**
+
+---
+
+## ✨ What it does today
+
+### 📦 Bootstrap the environment
+
+CODEA contains an `ApkManager` domain with an installation-chain design. The chain can check whether a package is installed, verify that an APK exists, and pass an `InstallSession` from one stage to the next.
+
+The project deliberately uses Kotlin's `Result<InstallSession>` so every stage has a clear success/failure boundary.
+
+### 🐚 Run a developer bootstrap sequence
+
+The current startup flow executes commands equivalent to:
+
+```bash
+pkg update -y
+pkg upgrade -y
+pkg install tur-repo -y
+pkg install code-server -y
+code-server --auth none &
+sleep 1
 ```
 
-## Integrate with your tools
+The UI reports progress through a persistent status dialog rather than silently doing work in the background.
 
-- [ ] [Set up project integrations](https://gitlab.com/cleverbravov/codea/-/settings/integrations)
+### 🌐 Open the development environment
 
-## Collaborate with your team
+Once the local server is started, CODEA loads:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```text
+http://127.0.0.1:8080
+```
 
-## Test and Deploy
+inside an Android `WebView` with JavaScript and DOM storage enabled.
 
-Use the built-in continuous integration in GitLab.
+The WebView also contains a small JavaScript/native bridge and recovery handling for loading and HTTP errors.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+---
 
-***
+## 🧩 Architecture
 
-# Editing this README
+```text
+src/app/src/main/java/com/codea/
+│
+├── MainActivity.kt
+├── JSEventsBridge.kt
+│
+├── domain/
+│   ├── ApkManager/
+│   │   ├── ApkManager.kt
+│   │   ├── InstallChain.kt
+│   │   ├── InstallSession.kt
+│   │   ├── CheckIfInstalled.kt
+│   │   ├── VerifyFileExists.kt
+│   │   ├── VerifyPGP.kt
+│   │   └── DeleteApkFile.kt
+│   │
+│   └── TerminalManager/
+│       ├── BashCommandExecutor.kt
+│       └── CommandState.kt
+│
+└── ui/theme/
+    ├── Color.kt
+    ├── Theme.kt
+    └── Type.kt
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The architectural idea is simple:
 
-## Suggestions for a good README
+**UI coordinates. Domain objects do the work. Termux provides the environment.**
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+That separation is especially useful because installation, shell execution, Android lifecycle, and WebView behavior all fail in very different ways.
 
-## Name
-Choose a self-explaining name for your project.
+---
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## 🛠 Stack
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+| Area | Technology |
+|---|---|
+| Language | Kotlin |
+| UI | Jetpack Compose + Material 3 |
+| Android | SDK 34 |
+| Async | Kotlin Coroutines |
+| Terminal | Termux shared library |
+| Development server | code-server |
+| Browser layer | Android WebView |
+| Build | Gradle + Kotlin DSL |
+| Tests | JUnit + AndroidX + Espresso |
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The current module uses `compileSdk 34`, `minSdk 34`, and `targetSdk 34`. fileciteturn4file0
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+---
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 🚀 Run it
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Clone
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+git clone https://github.com/cleverbravo/codea.git
+cd codea
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Build
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Open the project in Android Studio or run:
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+```bash
+./gradlew assembleDebug
+```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Install the resulting APK on an Android 14/API 34+ device.
 
-## License
-For open source projects, say how it is licensed.
+> A physical device is recommended because CODEA interacts with the Android/Termux environment.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### First launch
+
+The first launch is intentionally more dramatic than a normal Android app:
+
+```text
+┌───────────────────────────┐
+│       Please wait...      │
+├───────────────────────────┤
+│ Installing / checking...  │
+│ Running: pkg update -y    │
+│ Running: pkg upgrade -y   │
+│ Installing code-server... │
+│ Starting local server...  │
+└───────────────────────────┘
+             │
+             ▼
+      localhost:8080
+             │
+             ▼
+          CODEA 🚀
+```
+
+Depending on the Android/Termux setup, additional permission or configuration steps may be necessary before command execution works.
+
+---
+
+## 🔬 The interesting bits
+
+CODEA is really several experiments hiding inside one application:
+
+**Android ↔ Linux**  
+Use Android as the native host while delegating developer tooling to Termux.
+
+**App ↔ Shell**  
+Turn shell commands into structured application operations with success/failure results.
+
+**Native ↔ Web**  
+Use WebView to embed a browser-based development interface inside a Compose application.
+
+**Bootstrap ↔ Lifecycle**  
+Deal with the awkward reality that installing packages and starting servers takes longer than an Android frame.
+
+**Failure ↔ Recovery**  
+Treat errors and a server that is “not ready yet” as normal states instead of assuming localhost will always be available instantly.
+
+---
+
+## 🗺 Roadmap
+
+- [ ] Robust package/version detection
+- [ ] Complete APK hash/integrity verification
+- [ ] Reliable temporary APK cleanup
+- [ ] Better Termux permission detection
+- [ ] Persistent background server/service management
+- [ ] Start / stop / restart controls
+- [ ] Terminal and command-log viewer
+- [ ] Workspace/project management
+- [ ] Configurable code-server options
+- [ ] Better Android lifecycle handling
+- [ ] More installation-chain tests
+- [ ] Offline and recovery-first UX
+
+Some installation stages are currently placeholders. In particular, the repository contains explicit unfinished work for verification and APK cleanup. fileciteturn3file6 fileciteturn3file9
+
+---
+
+## ⚠️ Experimental means experimental
+
+CODEA is **not a production IDE yet**.
+
+Expect platform-specific behavior, Termux integration quirks, Android lifecycle surprises, incomplete installation stages, and rough edges around background execution.
+
+That is part of the project.
+
+> **The experiment is the product.**
+
+If something breaks, it is probably pointing at the next interesting engineering problem.
+
+---
+
+## 🤝 Contributing
+
+If you want to experiment with CODEA, improvements are welcome.
+
+A useful rule when changing the project:
+
+```text
+Android UI
+    ↓
+Application orchestration
+    ↓
+Domain operations
+    ↓
+Termux / shell
+    ↓
+Development services
+```
+
+Prefer improving a boundary over adding more responsibility to `MainActivity`.
+
+---
+
+## 👤 Author
+
+**Clever Bravo**
+
+Android · Kotlin · .NET · C++ · Linux · automation · developer tooling
+
+- GitHub: https://github.com/cleverbravo
+- Repository: https://github.com/cleverbravo/codea
+
+---
+
+## 📜 License
+
+No explicit open-source license is currently declared in the repository. If you plan to redistribute or publish a derivative, check the repository licensing status or contact the author first.
+
+---
+
+<div align="center">
+
+### CODEA
+
+**Pocket computer. Real shell. Tiny workstation.**
+
+`Kotlin` · `Compose` · `Termux` · `code-server` · `WebView`
+
+</div>
